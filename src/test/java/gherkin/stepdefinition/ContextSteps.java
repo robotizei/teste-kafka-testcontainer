@@ -2,10 +2,14 @@ package gherkin.stepdefinition;
 
 import br.com.pom.ContextoPage;
 import br.com.utils.ReporterUtils;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Entao;
 import io.cucumber.java.pt.Então;
 import io.cucumber.java.pt.Quando;
+
+import java.util.List;
+import java.util.Map;
 
 public class ContextSteps extends ReporterUtils {
 
@@ -33,4 +37,16 @@ public class ContextSteps extends ReporterUtils {
         contextoPage.validaMensagemTable(texto);
     }
 
+    /**
+     *
+     * @param table
+     *  | TITLE                 | CONTENT                      | BUTTON1  | BUTTON2   |
+     */
+    @Entao("deve exibir o modal com:")
+    public void deveExibirOModalCom(DataTable table) {
+        List<Map<String, String>> mapList = table.asMaps();
+        Map<String, String> line = mapList.get(0);
+        contextoPage.validaModal(line.get("TITLE"), line.get("CONTENT"), line.get("BUTTON1"), line.get("BUTTON2"));
+        addScreenshotToReport("Validei a modal");
+    }
 }

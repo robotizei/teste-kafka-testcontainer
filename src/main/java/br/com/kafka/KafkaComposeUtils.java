@@ -1,6 +1,5 @@
 package br.com.kafka;
 
-import br.com.kafka.model.Connectors;
 import br.com.kafka.predicates.StatusRequestPredicate;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
@@ -8,47 +7,76 @@ import com.github.dockerjava.core.command.ExecStartResultCallback;
 import io.restassured.http.ContentType;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import org.apache.http.NoHttpResponseException;
+import org.awaitility.Awaitility;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.ContainerState;
 import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.lang.reflect.Type;
 import java.net.URISyntaxException;
-import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static br.com.kafka.model.TFAConnectors.*;
 import static io.restassured.RestAssured.given;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Log
 public class KafkaComposeUtils {
-
+    public static final int POLL_INTERVAL = 5;
+    public static final int TIMEOUT = 150;
+    public static final String DOCKER_COMPOSE_ALL_YML = "src/test/resources/docker-compose/docker-compose-all.yml";
+    public static final String URL_CONNECTORS = "http://localhost:8083/connectors";
+    public static final int INITIAL_DELAY = 60;
     @Getter
     static DockerClient client = DockerClientFactory
             .instance()
             .client();
-    
-    @Getter
+
     private static DockerComposeContainer environment =
-            new DockerComposeContainer(new File("src/test/resources/docker-compose/docker-compose-all.yml"))
-                    .withExposedService("connect", 8083,
-                            Wait.forHttp("/connectors/")
-                                    .forStatusCodeMatching(new StatusRequestPredicate())
-                                    .withStartupTimeout(Duration.ofSeconds(150))
-                    )
+            new DockerComposeContainer(
+                    new File(
+                            DOCKER_COMPOSE_ALL_YML
+                    ))
                     .withPull(true)
                     .withLocalCompose(true);
 
     public static void startContainers() {
         environment.start();
+        awaitUrlResponse(URL_CONNECTORS);
+    }
+
+    private static void awaitUrlResponse(String url) {
+        log.info("Await initial");
+        Awaitility.with()
+                .pollDelay(INITIAL_DELAY, SECONDS)
+                .pollInterval(POLL_INTERVAL, SECONDS)
+                .atMost(TIMEOUT, SECONDS)
+                .await()
+                .ignoreException(NoHttpResponseException.class)
+                .until(() -> {
+                    log.info("Await interation");
+                    int status =
+                            given()
+                                    .when()
+                                    .get(url)
+                                    .then()
+                                    .extract()
+                                    .response()
+                                    .statusCode();
+
+                    return new StatusRequestPredicate().test(status);
+                });
+        log.info("Await finish");
     }
 
     public static void stopContainers() {
         environment.stop();
-        environment.close();
     }
 
     public static void addConnector(File connector) {
@@ -56,28 +84,18 @@ public class KafkaComposeUtils {
                 .body(connector)
                 .contentType(ContentType.JSON)
                 .when()
-                .log().all()
-                .post("http://localhost:8083/connectors")
+                .post(URL_CONNECTORS.concat("/"))
                 .then()
-                .log().all()
-                .statusCode(new StatusRequestPredicate())
-                .extract()
-                .response();
-
+                .statusCode(new StatusRequestPredicate());
     }
 
     public static void removeConnector(String connectorName) {
         given()
                 .contentType(ContentType.JSON)
                 .when()
-                .log().all()
-                .delete("http://localhost:8083/connectors/" + connectorName + "/")
+                .delete(URL_CONNECTORS + "/" + connectorName + "/")
                 .then()
-                .log().all()
-                .statusCode(new StatusRequestPredicate())
-                .extract()
-                .response();
-
+                .statusCode(new StatusRequestPredicate());
     }
 
     public static Optional<ContainerState> getContainerInfo(String containerServiceName) {
@@ -89,22 +107,22 @@ public class KafkaComposeUtils {
         addConnector(getFileJson(AWS_RUMO_INTEG_SOURCE_TRANSLOGIC_TFA_INCREMENTING_1));
         addConnector(getFileJson(AWS_RUMO_INTEG_SOURCE_TRANSLOGIC_TFA_TIMESTAMP_1));
         addConnector(getFileJson(AWS_RUMO_INTEG_SINK_TFA_PRISMA_0));
-        getConnectors();
+        log.info(getAllConnectors().stream().collect(Collectors.joining(",")));
         removeConnector(AWS_RUMO_INTEG_SOURCE_TRANSLOGIC_TFA_INCREMENTING_1);
         removeConnector(AWS_RUMO_INTEG_SOURCE_TRANSLOGIC_TFA_TIMESTAMP_1);
         removeConnector(AWS_RUMO_INTEG_SINK_TFA_PRISMA_0);
         stopContainers();
     }
 
-    private static Connectors[] getConnectors() {
+    private static List<String> getAllConnectors() {
         return
                 given()
                         .when()
-                        .get("http://localhost:8083/connectors")
+                        .get(URL_CONNECTORS)
                         .then()
                         .statusCode(200)
                         .extract()
-                        .body().as(Connectors[].class);
+                        .body().as((Type) String[].class);
     }
 
     /**

@@ -4,6 +4,7 @@ import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 
+import static br.com.kafka.KafkaComposeUtils.startContainers;
 import static br.com.model.GeradorDeMassa.featureName;
 import static br.com.model.GeradorDeMassa.updateValuesMassas;
 import static br.com.utils.PropertiesHelper.initializeProps;
@@ -21,11 +22,11 @@ public class Hook {
         }
         testScenario.set(scenario);
     }
-//
-//    @Before("@KAFKA")
-//    public void init(Scenario scenario) {
-//
-//    }
+
+    @Before("@KAFKA")
+    public void initKafka(Scenario scenario) {
+        startContainers();
+    }
 
     @After()
     public void cleanUp() {
