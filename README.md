@@ -1,6 +1,6 @@
-# Testes Automatizados Circulação
+# Testes Automatizados 
 
-Automação do projeto controle de perdas, aplicando linguagem gherkin.
+Automação do projeto xxxxxxxx, aplicando linguagem gherkin.
 
 ## PRÉ-REQUISITOS
 
@@ -31,11 +31,6 @@ Para gerar o report html quando executado os testes pela IDE, deve ser executado
         
 ```
 
-## EMPRESA DESENVOLVEDORA
-
-GFT Group
-
 ## AUTORES
 
 * **Deovan Zanol**
-* **Felipe Nowak**
