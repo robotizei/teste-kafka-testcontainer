@@ -2,9 +2,9 @@
     "name": "aws-rumo-integ-source-translogic-tfa-timestamp-1",
     "config": {
         "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-        "connection.url": "jdbc:oracle:thin:@10.200.92.119:1521:tlfd",
-        "connection.user": "translogic",
-        "connection.password": "engesis",
+        "connection.url": "jdbc:oracle:thin:@IP:1521:tlfd",
+        "connection.user": "",
+        "connection.password": "",
         "topic.prefix": "translogic-1-vw-prisma-tfa-kakfa",
         "mode": "timestamp",
         "timestamp.column.name": "DATA_ALTERACAO",
