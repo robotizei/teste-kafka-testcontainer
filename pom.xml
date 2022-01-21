@@ -24,7 +24,7 @@
         <javafaker.version>1.0.2</javafaker.version>
         <restAssured.version>4.3.0</restAssured.version>
         <jooq.version>3.13.2</jooq.version>
-        <h2.version>1.4.200</h2.version>
+        <h2.version>2.1.210</h2.version>
         <oracle.ojdbc.version>12.1.0.2</oracle.ojdbc.version>
         <testcontainers.version>1.14.3</testcontainers.version>
         <awaitility.version>4.0.3</awaitility.version>
