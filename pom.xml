@@ -16,7 +16,7 @@
         <selenium-java.version>3.141.59</selenium-java.version>
         <webdrivermanager.version>4.0.0</webdrivermanager.version>
         <cucumber.version>5.7.0</cucumber.version>
-        <testng.version>7.1.0</testng.version>
+        <testng.version>7.7.0</testng.version>
         <junit-jupiter.version>5.6.2</junit-jupiter.version>
         <extentreports.version>4.1.6</extentreports.version>
         <cluecumber.version>2.5.0</cluecumber.version>
